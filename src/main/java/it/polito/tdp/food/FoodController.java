@@ -5,7 +5,10 @@
 package it.polito.tdp.food;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
+
+import it.polito.tdp.food.model.Adiacenza;
 import it.polito.tdp.food.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -40,7 +43,7 @@ public class FoodController {
     private Button btnCammino; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxPorzioni"
-    private ComboBox<?> boxPorzioni; // Value injected by FXMLLoader
+    private ComboBox<String> boxPorzioni; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtResult"
     private TextArea txtResult; // Value injected by FXMLLoader
@@ -48,21 +51,94 @@ public class FoodController {
     @FXML
     void doCammino(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Cerco cammino peso massimo...");
+    	
+    	int N;
+    	try {
+    		N = Integer.parseInt(this.txtPassi.getText());
+    	}catch(NumberFormatException nfe) {
+    		this.txtResult.setText("Prima indicare un numero massimo di passi");
+    		return;
+    	}
+    	
+    	double c;
+    	try {
+    		c = Double.parseDouble(this.txtCalorie.getText());
+    	}catch(NumberFormatException nfe) {
+    		this.txtResult.setText("Prima indica un numero minimo di calorie e creare il grafo");
+    		return;
+    	}
+    	
+    	String selezione = this.boxPorzioni.getValue();
+    	
+    	if(selezione == null) {
+    		this.txtResult.setText("Prima selezionare un vertice del grafo creato");
+    		return;
+    	}else {
+    		txtResult.appendText("Cerco cammino peso massimo...");
+    		
+    		List<String> cammino = model.trovaCammino(selezione, N);
+    		txtResult.clear();
+    		
+    		this.txtResult.appendText("Hai selezionato il vertice: " + selezione + " il cui cammino minimo risulta essere: \n\n");
+    		for(String s: cammino) {
+    			this.txtResult.appendText(s + "\n");
+    		}
+    		
+    		this.txtResult.appendText("\n Il peso totale: " + model.getPesoMassimo());
+    	}
+    	
     }
 
     @FXML
     void doCorrelate(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Cerco porzioni correlate...");
+    	
+    	double c;
+    	try {
+    		c = Double.parseDouble(this.txtCalorie.getText());
+    	}catch(NumberFormatException nfe) {
+    		this.txtResult.setText("Prima indica un numero minimo di calorie e creare il grafo");
+    		return;
+    	}
+    	
+    	String selezione = this.boxPorzioni.getValue();
+    	
+    	if(selezione == null) {
+    		this.txtResult.setText("Prima selezionare un vertice del grafo creato");
+    		return;
+    	}else {
+    		List<Adiacenza> res = model.getCorrelate(selezione);
+    		
+    		if(res != null) {
+    			
+    			this.txtResult.appendText("Hai indicato il vertice: " + selezione +"\n I suoi vicini sono: \n\n");
+    			for(Adiacenza a: res) {
+    				this.txtResult.appendText(a.getP2() + " - peso: " + a.getPeso()  + "\n");
+    			}
+    			
+    		}
+    	}
     	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
     	txtResult.clear();
-    	txtResult.appendText("Creazione grafo...");
     	
+    	double c;
+    	try {
+    		c = Double.parseDouble(this.txtCalorie.getText());
+    	}catch(NumberFormatException nfe) {
+    		this.txtResult.setText("Prima indica un numero minimo di calorie");
+    		return;
+    	}
+    	
+    	this.model.creaGrafo(c);
+    	
+    	txtResult.appendText("Creato grafo\n\n");
+    	this.txtResult.appendText("#vertici: " + model.getNVertici() +"\n");
+    	this.txtResult.appendText("#archi: " + model.getNArchi());
+    	this.boxPorzioni.getItems().addAll(model.getVertici());
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -79,5 +155,6 @@ public class FoodController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	
     }
 }
